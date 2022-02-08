@@ -1,9 +1,12 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+const router = express.Router();
+
+router.get('/',
+    ensureLoggedIn(),
+    function (req, res, next) {
+        res.render('index', {user: req.user});
+    });
 
 module.exports = router;
