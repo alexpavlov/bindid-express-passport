@@ -9,6 +9,7 @@ const SQLiteStore = require('connect-sqlite3')(session);
 const indexRouter = require('./routes/index');
 const authCommonRouter = require('./routes/auth-common');
 const authPasswordRouter = require('./routes/auth-password');
+const authBindIDRouter = require('./routes/auth-bindid');
 const mkdirp = require("mkdirp");
 
 const sessionDBPath = 'var/db';
@@ -37,6 +38,7 @@ app.use(passport.authenticate('session'));
 app.use('/', indexRouter);
 app.use('/', authCommonRouter);
 app.use('/', authPasswordRouter);
+app.use('/', authBindIDRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
