@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  if error
+    section(class='prompt error')
+      p= error
+  section(class='prompt')
+    h1 Profile
+    form(action='/profile' method='post')
+      section
+        label(for='name') Name
+        input(id='name' name='name' type='text' autocomplete='name' required autofocus)
+      button(type='submit') Save

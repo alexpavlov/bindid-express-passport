@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  if error
+    section(class='prompt error')
+      p= error
+  section(class='prompt')
+    h1 Sign Up
+    form(action='/signup' method='post')
+      section
+        label(for='email') Email
+        input(id='email' name='email' type='text' autocomplete='email' value=`${request_body.email ? request_body.email : ''}` required autofocus)
+      section
+        label(for='password') Password
+        input(id='password' name='password' type='password' autocomplete='new-password' required)
+      section
+        label(for='repeat_password') Confirm New Password
+        input(id='repeat_password' name='repeat_password' type='password' autocomplete='new-password' required)
+      button(type='submit') Sign Up
+    hr
+    h3 Tired of passwords? Use biometrics instead!
+    form(action='login/bindid' method='submit')
+      button(type='submit') Sign in/Sign up using BindID
+    p(class='help') Already have an account? !{'<a href="/login">Sign in</a>'}
