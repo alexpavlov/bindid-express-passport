@@ -3,15 +3,16 @@ const passport = require('passport');
 const OpenIDConnectStrategy = require('passport-openidconnect');
 const AppDB = require("../db");
 const strategyName = 'bindid';
+require("dotenv").config();
 
 passport.use(strategyName, new OpenIDConnectStrategy({
-        issuer: 'https://signin.bindid-sandbox.io',
-        authorizationURL: 'https://signin.bindid-sandbox.io/authorize',
-        tokenURL: 'https://signin.bindid-sandbox.io/token',
-        userInfoURL: 'https://signin.bindid-sandbox.io/userinfo',
-        clientID: '16ce9661.f65ed594.dev_a5f90f4a.bindid.io',
-        clientSecret: 'caa85c1b-74bb-4258-972b-220aa63f30b3',
-        callbackURL: 'http://localhost:8080/redirect',
+        issuer: process.env['BINDID_SERVER_URL'],
+        authorizationURL: `${process.env['BINDID_SERVER_URL']}/authorize`,
+        tokenURL: `${process.env['BINDID_SERVER_URL']}/token`,
+        userInfoURL: `${process.env['BINDID_SERVER_URL']}/userinfo`,
+        clientID: process.env['BINDID_CLIENT_ID'],
+        clientSecret: process.env['BINDID_CLIENT_SECRET'],
+        callbackURL: process.env['BINDID_REDIRECT_URI'],
         skipUserProfile: false,
         acrValues: 'ts.bindid.iac.email',
         scope: ['openid', 'email']

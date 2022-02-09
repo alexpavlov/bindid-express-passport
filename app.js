@@ -11,6 +11,38 @@ const authCommonRouter = require('./routes/auth-common');
 const authPasswordRouter = require('./routes/auth-password');
 const authBindIDRouter = require('./routes/auth-bindid');
 const mkdirp = require("mkdirp");
+require("dotenv").config();
+
+const requiredEnvParams = [
+  'BINDID_SERVER_URL',
+  'BINDID_CLIENT_ID',
+  'BINDID_CLIENT_SECRET',
+  'BINDID_REDIRECT_URI',
+  'PORT'
+];
+
+var killSwitch = false;
+
+requiredEnvParams.forEach((param) => {
+  if (!process.env[param] || process.env[param].length === 0) {
+    killSwitch = true;
+    console.warn(
+        `FATAL: Missing mandatory environment variable ${param}`
+    );
+  }
+});
+
+if (killSwitch) {
+  process.exit(1);
+}
+
+for (const param of requiredEnvParams) {
+  if (!process.env[param] || process.env[param].length === 0) {
+    console.warn(
+        `WARNING: Parameter ${param} is undefined, unexpected behaviour may occur, check your environment file`
+    );
+  }
+}
 
 const sessionDBPath = 'var/db';
 mkdirp.sync(sessionDBPath);
@@ -56,10 +88,6 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-const port = process.env.PORT || 8080;
-
-app.listen(port, () => {
-  console.log(`Tha app is listening on port ${port}`)
-})
+console.log(`The app is listening on port ${process.env.PORT}`)
 
 module.exports = app;
