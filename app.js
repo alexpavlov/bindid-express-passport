@@ -10,6 +10,7 @@ const indexRouter = require('./routes/index');
 const authCommonRouter = require('./routes/auth-common');
 const authPasswordRouter = require('./routes/auth-password');
 const authBindIDRouter = require('./routes/auth-bindid');
+const enrollmentRouter = require('./routes/enroll');
 const mkdirp = require("mkdirp");
 require("dotenv").config();
 
@@ -71,6 +72,7 @@ app.use('/', indexRouter);
 app.use('/', authCommonRouter);
 app.use('/', authPasswordRouter);
 app.use('/', authBindIDRouter);
+app.use('/', enrollmentRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -79,6 +81,12 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+
+  if (err.message === 'multiple accounts') {
+    res.render('enroll', {error: 'You have already activated biometric authentication for another account', user: req.user});
+    return;
+  }
+
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

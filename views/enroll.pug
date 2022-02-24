@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  if error
+    section(class='prompt error')
+      p= error
+  section(class='prompt')
+    h1 Authorize biometric enrollment
+    form(action='/enroll' method='post')
+      section
+        label(for='password') Current Password
+        input(id='password' name='password' type='password' autocomplete='current-password' required)
+      button(type='submit') Enroll
+    hr
+    p(class='help') In a hurry? !{'<a href="/">Enroll later</a>'}

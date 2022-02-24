@@ -4,5 +4,7 @@ block content
   section(class='prompt')
     h1 Protected Page
     h3= `Hi ${user.name || 'Friend'}. Welcome to our web site!`
+    if suggestBindID
+      p(class='help') Tired of passwords? !{'<a href="/enroll">Enroll in biometric authentication</a>'} here
     form(action='/logout' method='post')
       button(type='submit') Logout

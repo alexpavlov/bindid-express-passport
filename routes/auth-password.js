@@ -1,22 +1,11 @@
 const express = require('express');
 const passport = require('passport');
+const common = require('../common');
 const LocalStrategy = require('passport-local');
 const emailValidator = require("email-validator");
 const crypto = require('crypto');
 const AppDB = require("../db");
 const strategyName = 'password';
-
-async function calculatePasswordHash(password, salt) {
-    return new Promise((resolve, reject) => {
-        crypto.pbkdf2(password, salt, 310000, 32, 'sha256', function(err, hashedPassword) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(hashedPassword)
-            }
-        });
-    });
-}
 
 passport.use(strategyName, new LocalStrategy(async function verify(email, password, cb) {
     const db = new AppDB();
@@ -24,7 +13,7 @@ passport.use(strategyName, new LocalStrategy(async function verify(email, passwo
         const user = await db.findUserByEmail(email);
         if (!user) { return cb(null, false); }
         try {
-            const passwordHash = await calculatePasswordHash(password, user.salt);
+            const passwordHash = await common.calculatePasswordHash(password, user.salt);
             if (!crypto.timingSafeEqual(user.password_hash, passwordHash)) {
                 return cb(null, false);
             }
@@ -70,7 +59,7 @@ router.post('/signup', async function (req, res, next) {
     const salt = crypto.randomBytes(16);
 
     try {
-        const hashedPassword = await calculatePasswordHash(req.body.password, salt);
+        const hashedPassword = await common.calculatePasswordHash(req.body.password, salt);
         const db = new AppDB();
         try {
             if (await db.findUserByEmail(email)) {

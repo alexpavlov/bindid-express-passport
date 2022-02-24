@@ -15,11 +15,13 @@ passport.use(strategyName, new OpenIDConnectStrategy({
         callbackURL: process.env['BINDID_REDIRECT_URI'],
         skipUserProfile: false,
         acrValues: 'ts.bindid.iac.email',
-        scope: ['openid', 'email']
+        scope: ['openid', 'email'],
+        nonce: true,
+        passReqToCallback: true
     },
-    async function verify(issuer, uiProfile, idProfile, context, idToken, accessToken, refreshToken, params, cb) {
+    async function verify(req, issuer, uiProfile, idProfile, context, idToken, accessToken, refreshToken, params, cb) {
 
-        let user;
+        let user, email;
         const db = new AppDB();
 
         try {
@@ -33,32 +35,47 @@ passport.use(strategyName, new OpenIDConnectStrategy({
                 user = await db.findUserById(credentials.user_id);
 
                 if (!user) {  // Data integrity issue
-                    return cb("internal error");
+                    return cb(new Error("internal error"));
                 }
-                return cb(null, user);
+
+                // Check if it is a biometric enrollment for currently signed-in user
+                if (req.user && req.user.id !== user.id) {
+                    return cb(new Error("multiple accounts"))
+                }
+                return cb(null, {
+                    id: user.id.toString(),
+                    name: user.name,
+                    email: user.email
+                });
             }
 
-            // The BindID user is logging in for the first time. We need to set up a local account.
-            // Since email address provided by BindID is verified, we can try to match a legacy
-            // account by email.
-            let email = uiProfile._json.email_verified ? uiProfile._json.email : null;
+            // The BindID user is logging in for the first time. Check if it is a biometric enrollment
+            // for currently signed-in user
+            if (req.user) {
+                user = req.user;
+            } else {
+                // The email address provided by BindID is verified, so we can try to match a legacy
+                // account by email.
+                email = uiProfile._json.email_verified ? uiProfile._json.email : null;
 
-            if (email) {
-                user = await db.findUserByEmail(email);
-
-                if (user) {
-                    await db.createFederatedCredentials(user.id, issuer, idProfile.id);
-                    await db.commit();
-                    return cb(null, {
-                        id: user.id.toString(),
-                        name: user.name,
-                        email: email
-                    });
+                if (email) {
+                    user = await db.findUserByEmail(email);
                 }
             }
 
-            // Verified email is not available, or user with matching email does not exist. Either way
-            // we need to create a new user record.
+            if (user) {
+                await db.createFederatedCredentials(user.id, issuer, idProfile.id);
+                await db.commit();
+                return cb(null, {
+                    id: user.id.toString(),
+                    name: user.name,
+                    email: user.email
+                });
+            }
+
+            // Verified email is not available, or user with matching email does not exist, and it is not
+            // a biometric enrollment. Either way we need to create new user along with
+            // federated credentials record.
             let rowId = await db.createUser(email, idProfile.displayName);
             await db.createFederatedCredentials(rowId, issuer, idProfile.id);
             await db.commit();
@@ -68,15 +85,17 @@ passport.use(strategyName, new OpenIDConnectStrategy({
                     email: email
                 }
             );
-
         } catch (error) {
-            try { await db.rollback(); } catch (_) {}
+            try {
+                await db.rollback();
+            } catch (_) {
+            }
             return cb(error);
         } finally {
             await db.close();
         }
     }
-));
+))
 
 const router = express.Router();
 
@@ -86,8 +105,8 @@ router.post('/login/bindid', passport.authenticate(strategyName, {
 }));
 
 router.get('/redirect',
-    passport.authenticate(strategyName, { failureRedirect: '/login', failureMessage: true }),
-    function(req, res) {
+    passport.authenticate(strategyName, {failureRedirect: '/login', failureMessage: true}),
+    function (req, res) {
         let user = req.session.passport.user;
         if (!user) {
             res.redirect('/login');
