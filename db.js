@@ -61,10 +61,10 @@ class AppDB {
         });
     }
 
-    findFederatedCredentialsByUserId(id) {
+    findFederatedCredentialsByUserIdAndProvider(id, provider) {
         const that = this;
         return new Promise(((resolve, reject) => {
-            that.db.get('SELECT rowid as id, * FROM federated_credentials WHERE user_id = ?', [id], function(err, credentials) {
+            that.db.all('SELECT rowid as id, * FROM federated_credentials WHERE user_id = ? AND provider = ?', [id, provider], function(err, credentials) {
                if (err) { reject(err); }
                else { resolve(credentials); }
             });
