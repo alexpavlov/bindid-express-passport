@@ -5,7 +5,7 @@ const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
 passport.serializeUser(function(user, cb) {
     process.nextTick(function() {
-        cb(null, { id: user.id, name: user.name, email: user.email });
+        cb(null, { id: user.id, name: user.name, email: user.email, new_bindid_account: user.new_bindid_account == true });
     });
 });
 

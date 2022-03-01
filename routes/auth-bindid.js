@@ -2,8 +2,12 @@ const express = require('express');
 const passport = require('passport');
 const OpenIDConnectStrategy = require('passport-openidconnect');
 const AppDB = require("../db");
+const emailValidator = require("email-validator");
+const common = require("../common");
+const crypto = require("crypto");
 const strategyName = 'bindid';
 require("dotenv").config();
+const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
 passport.use(strategyName, new OpenIDConnectStrategy({
         issuer: process.env['BINDID_SERVER_URL'],
@@ -82,7 +86,8 @@ passport.use(strategyName, new OpenIDConnectStrategy({
             return cb(null, {
                     id: rowId,
                     name: idProfile.displayName,
-                    email: email
+                    email: email,
+                    new_bindid_account: true
                 }
             );
         } catch (error) {
@@ -114,6 +119,59 @@ router.get('/redirect',
             res.redirect('/profile');
         } else {
             res.redirect('/');
+        }
+    });
+
+router.get('/link',
+    ensureLoggedIn(),
+    function(req, res, next) {
+        if (!req.session.passport.user.new_bindid_account) {
+            res.redirect('/');
+        }
+        res.render('link', {user: req.session.passport.user});
+});
+
+router.post('/link',
+    ensureLoggedIn(),
+    async function(req, res, next) {
+        if (!req.session.passport.user.new_bindid_account) {
+            res.redirect('/');
+            return;
+        }
+        if (req.body.skip) {
+            req.session.passport.user.new_bindid_account = undefined;
+            res.redirect('/');
+            return;
+        }
+        let email = req.body.email?.toLowerCase();
+        if (!emailValidator.validate(email)) {
+            res.render('link', {error: 'Missing or invalid email', request_body: req.body, user: req.session.passport.user});
+            return;
+        }
+        if (!req.body.password) {
+            res.render('link', {error: 'Missing password', request_body: req.body, user: req.session.passport.user});
+            return;
+        }
+        const db = new AppDB();
+        try {
+            const user = await db.findUserByEmail(email);
+            if (!user) {
+                res.render('link', {error: 'Invalid credentials', user: req.session.passport.user, request_body: req.body});
+                return;
+            }
+            const passwordHash = await common.calculatePasswordHash(req.body.password, user.salt);
+            if (!crypto.timingSafeEqual(user.password_hash, passwordHash)) {
+                res.render('link', {error: 'Invalid credentials', user: req.session.passport.user, request_body: req.body});
+                return;
+            }
+            await db.switchFederatedCredentials(req.session.passport.user.id, user.id, process.env['BINDID_SERVER_URL']);
+            await db.deleteUserById(req.session.passport.user.id);
+            req.logout();
+            req.login(user, {}, function() {
+                res.redirect('/');
+            });
+        } finally {
+            await db.close();
         }
     });
 

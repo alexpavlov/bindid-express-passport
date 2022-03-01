@@ -10,7 +10,7 @@ const strategyName = 'password';
 passport.use(strategyName, new LocalStrategy(async function verify(email, password, cb) {
     const db = new AppDB();
     try {
-        const user = await db.findUserByEmail(email);
+        const user = await db.findUserByEmail(email?.toLowerCase());
         if (!user) { return cb(null, false); }
         try {
             const passwordHash = await common.calculatePasswordHash(password, user.salt);
@@ -42,7 +42,7 @@ router.get('/signup', function(req, res, next) {
 });
 
 router.post('/signup', async function (req, res, next) {
-    let email = req.body.email.toLowerCase();
+    let email = req.body.email?.toLowerCase();
     if (!emailValidator.validate(email)) {
         res.render('signup', {error: 'Missing or invalid email', request_body: req.body});
         return;

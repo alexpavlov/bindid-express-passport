@@ -71,6 +71,20 @@ class AppDB {
         }));
     }
 
+    switchFederatedCredentials(from, to, provider) {
+        const that = this;
+        return new Promise((resolve, reject) => {
+            that.db.run('UPDATE federated_credentials SET user_id = ? WHERE user_id = ? AND provider = ?', [
+                to,
+                from,
+                provider
+            ], function(err) {
+                if (err) { reject(err) }
+                else { resolve() }
+            });
+        });
+    }
+
     createFederatedCredentials(local_user_id, provider, provider_user_id) {
         const that = this;
         return new Promise((resolve, reject) => {
@@ -91,6 +105,16 @@ class AppDB {
             that.db.get('SELECT rowid AS id, * FROM users WHERE ROWID = ?', [id], function(err, user) {
                 if (err) { reject(err); }
                 else { resolve(user); }
+            });
+        });
+    }
+
+    deleteUserById(id) {
+        const that = this;
+        return new Promise((resolve, reject) => {
+            that.db.run('DELETE FROM users WHERE ROWID = ?', [id], function(err) {
+                if (err) { reject(err); }
+                else { resolve(); }
             });
         });
     }
