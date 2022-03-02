@@ -8,8 +8,8 @@ block content
     h1 Protected Page
     h3= `Hi ${user.name || 'Friend'}. Welcome to our web site!`
     p You have just signed in using biometric authentication.
-      | If you already have a password protected account, please enter your credentials.
-      | Doing this will enroll your existing account into biometric authentication.
+      |  If you already have a password protected account, please enter your credentials.
+      |  Doing this will enroll your existing account into biometric authentication.
     form(action='/link' method='post')
       section
         label(for='email') Email

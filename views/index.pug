@@ -6,16 +6,6 @@ block content
     h3= `Hi ${user.name || 'Friend'}. Welcome to our web site!`
     if suggestBindID
       p(class='help') Tired of passwords? !{'<a href="/enroll">Enroll in biometric authentication</a>'} here
-    else if user.new_bindid_account
-      p(class='help') Do you want to add biometric authentication to an existing password protected account?
-      form(action='/login/password' method='post')
-        section
-          label(for='username') Email
-          input(id='username' name='username' type='text' autocomplete='email' required autofocus)
-        section
-          label(for='password') Password
-          input(id='password' name='password' type='password' autocomplete='current-password' required)
-        button(type='submit') Add Biometric Authentication
     hr
     form(action='/logout' method='post')
       button(type='submit') Logout

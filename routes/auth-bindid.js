@@ -115,6 +115,8 @@ router.get('/redirect',
         let user = req.session.passport.user;
         if (!user) {
             res.redirect('/login');
+        } else if (req.session.passport.user.new_bindid_account) {
+            res.redirect('/link')
         } else if (!user.name) {
             res.redirect('/profile');
         } else {
@@ -134,13 +136,14 @@ router.get('/link',
 router.post('/link',
     ensureLoggedIn(),
     async function(req, res, next) {
-        if (!req.session.passport.user.new_bindid_account) {
+        const user = req.session.passport.user;
+        if (!user.new_bindid_account) {
             res.redirect('/');
             return;
         }
         if (req.body.skip) {
             req.session.passport.user.new_bindid_account = undefined;
-            res.redirect('/');
+            res.redirect(user.name ? '/' : '/profile');
             return;
         }
         let email = req.body.email?.toLowerCase();
