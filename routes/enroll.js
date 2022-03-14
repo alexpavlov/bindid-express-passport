@@ -1,5 +1,5 @@
 const express = require('express');
-const common = require('../common');
+const common = require('./password-utils');
 const AppDB = require("../db");
 const crypto = require("crypto");
 const passport = require("passport");

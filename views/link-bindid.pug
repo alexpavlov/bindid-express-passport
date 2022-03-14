@@ -10,7 +10,7 @@ block content
     p You have just signed in using biometric authentication.
       |  If you already have a password protected account, please enter your credentials.
       |  Doing this will enroll your existing account into biometric authentication.
-    form(action='/link' method='post')
+    form(action='/link/bindid' method='post')
       section
         label(for='email') Email
         input(id='email' name='email' type='text' autocomplete='email' required autofocus)
@@ -20,6 +20,6 @@ block content
       button(type='submit') Authenticate
     hr
     p If you skip the authentication, we will create a new account for you.
-    form(action='/link' method='post')
+    form(action='/link/bindid' method='post')
       input(id='skip' name='skip' type='hidden' value='true')
       button(type='submit') Skip Authentication

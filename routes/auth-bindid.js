@@ -3,8 +3,7 @@ const passport = require('passport');
 const OpenIDConnectStrategy = require('passport-openidconnect');
 const AppDB = require("../db");
 const emailValidator = require("email-validator");
-const common = require("../common");
-const crypto = require("crypto");
+const passwordUtils = require("./password-utils");
 const strategyName = 'bindid';
 require("dotenv").config();
 const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
@@ -109,14 +108,14 @@ router.post('/login/bindid', passport.authenticate(strategyName, {
     failureRedirect: '/login'
 }));
 
-router.get('/redirect',
+router.get('/redirect/bindid',
     passport.authenticate(strategyName, {failureRedirect: '/login', failureMessage: true}),
     function (req, res) {
         let user = req.session.passport.user;
         if (!user) {
             res.redirect('/login');
         } else if (req.session.passport.user.new_bindid_account) {
-            res.redirect('/link')
+            res.redirect('/link/bindid')
         } else if (!user.name) {
             res.redirect('/profile');
         } else {
@@ -124,53 +123,53 @@ router.get('/redirect',
         }
     });
 
-router.get('/link',
+router.get('/link/bindid',
     ensureLoggedIn(),
     function(req, res, next) {
         if (!req.session.passport.user.new_bindid_account) {
             res.redirect('/');
         }
-        res.render('link', {user: req.session.passport.user});
+        res.render('link-bindid', {user: req.session.passport.user});
 });
 
-router.post('/link',
+router.post('/link/bindid',
     ensureLoggedIn(),
     async function(req, res, next) {
-        const user = req.session.passport.user;
-        if (!user.new_bindid_account) {
+        const currentUser = req.session.passport.user;
+        if (!currentUser.new_bindid_account) {
             res.redirect('/');
             return;
         }
         if (req.body.skip) {
             req.session.passport.user.new_bindid_account = undefined;
-            res.redirect(user.name ? '/' : '/profile');
+            res.redirect(currentUser.name ? '/' : '/profile');
             return;
         }
         let email = req.body.email?.toLowerCase();
         if (!emailValidator.validate(email)) {
-            res.render('link', {error: 'Missing or invalid email', request_body: req.body, user: req.session.passport.user});
+            res.render('link-bindid', {error: 'Missing or invalid email', request_body: req.body, user: currentUser});
             return;
         }
         if (!req.body.password) {
-            res.render('link', {error: 'Missing password', request_body: req.body, user: req.session.passport.user});
+            res.render('link-bindid', {error: 'Missing password', request_body: req.body, user: currentUser});
             return;
+        }
+        try {
+            var linkedUser = await passwordUtils.authenticateUser(email, req.body.password);
+        } catch (error) {
+            if (error instanceof passwordUtils.InvalidCredentialsError) {
+                res.render('link-bindid', {error: 'Invalid credentials', user: currentUser, request_body: req.body});
+                return;
+            }
+            throw error;
         }
         const db = new AppDB();
         try {
-            const user = await db.findUserByEmail(email);
-            if (!user) {
-                res.render('link', {error: 'Invalid credentials', user: req.session.passport.user, request_body: req.body});
-                return;
-            }
-            const passwordHash = await common.calculatePasswordHash(req.body.password, user.salt);
-            if (!crypto.timingSafeEqual(user.password_hash, passwordHash)) {
-                res.render('link', {error: 'Invalid credentials', user: req.session.passport.user, request_body: req.body});
-                return;
-            }
-            await db.switchFederatedCredentials(req.session.passport.user.id, user.id, process.env['BINDID_SERVER_URL']);
-            await db.deleteUserById(req.session.passport.user.id);
+            // const user = await db.findUserByEmail(email);
+            await db.switchFederatedCredentials(currentUser.id, linkedUser.id, process.env['BINDID_SERVER_URL']);
+            await db.deleteUserById(currentUser.id);
             req.logout();
-            req.login(user, {}, function() {
+            req.login(linkedUser, {}, function() {
                 res.redirect('/');
             });
         } finally {

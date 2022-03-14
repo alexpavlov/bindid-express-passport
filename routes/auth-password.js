@@ -1,6 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const common = require('../common');
+const passwordUtils = require('./password-utils');
 const LocalStrategy = require('passport-local');
 const emailValidator = require("email-validator");
 const crypto = require('crypto');
@@ -8,21 +8,14 @@ const AppDB = require("../db");
 const strategyName = 'password';
 
 passport.use(strategyName, new LocalStrategy(async function verify(email, password, cb) {
-    const db = new AppDB();
     try {
-        const user = await db.findUserByEmail(email?.toLowerCase());
-        if (!user) { return cb(null, false); }
-        try {
-            const passwordHash = await common.calculatePasswordHash(password, user.salt);
-            if (!crypto.timingSafeEqual(user.password_hash, passwordHash)) {
-                return cb(null, false);
-            }
-        } catch (error) {
-            return cb(error);
-        }
+        const user = await passwordUtils.authenticateUser(email, password);
         return cb(null, user);
-    } finally {
-        await db.close();
+    } catch (error) {
+        if (error instanceof passwordUtils.InvalidCredentialsError) {
+            return cb(null, null);
+        }
+        return cb(error, false)
     }
 }));
 
@@ -59,7 +52,7 @@ router.post('/signup', async function (req, res, next) {
     const salt = crypto.randomBytes(16);
 
     try {
-        const hashedPassword = await common.calculatePasswordHash(req.body.password, salt);
+        const hashedPassword = await passwordUtils.calculatePasswordHash(req.body.password, salt);
         const db = new AppDB();
         try {
             if (await db.findUserByEmail(email)) {
