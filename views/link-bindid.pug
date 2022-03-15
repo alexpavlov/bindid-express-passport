@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  if error
+    section(class='prompt error')
+      p= error
+  section(class='prompt')
+    h1 Protected Page
+    h3= `Hi ${user.name || 'Friend'}. Welcome to our web site!`
+    p You have just signed in using biometric authentication.
+      |  If you already have a password protected account, please enter your credentials.
+      |  Doing this will enroll your existing account into biometric authentication.
+    form(action='/link/bindid' method='post')
+      section
+        label(for='email') Email
+        input(id='email' name='email' type='text' autocomplete='email' required autofocus)
+      section
+        label(for='password') Password
+        input(id='password' name='password' type='password' autocomplete='current-password' required)
+      button(type='submit') Authenticate
+    hr
+    p If you skip the authentication, we will create a new account for you.
+    form(action='/link/bindid' method='post')
+      input(id='skip' name='skip' type='hidden' value='true')
+      button(type='submit') Skip Authentication

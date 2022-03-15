@@ -1,29 +1,24 @@
-# README #
+# BindID - NodeJS/Express/Passport #
 
-This README would normally document whatever steps are necessary to get your application up and running.
 
-### What is this repository for? ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+### Sample website featuring integration of BindID into Express/Passport environment. ###
 
-### How do I get set up? ###
+#### Features ####
+* BindID integration via [OpenID Connect](https://www.passportjs.org/packages/passport-openidconnect/) strategy
+* Multiple scenarios for new and legacy user onboarding
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+### Setup ###
 
-### Contribution guidelines ###
+* Create an app using [BindID Admin Portal](https://admin.bindid-sandbox.io/console/#/applications).
+     From the application settings, obtain the client credentials and configure redirect URL.
+     See [BindID Admin Portal: Get Started](https://developer.bindid.io/docs/guides/admin_portal/topics/getStarted/get_started_admin_portal)
+     for detailed instructions on configuring an app.
+* Rename env-template file into .env and edit the .env to initialize variables with values taken from BindID Admin Portal
+* Launch the server: _npm start_
 
-* Writing tests
-* Code review
-* Other guidelines
+### When in doubt ###
 
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Read the source code
+* RTFM
+* If none of the above works ping me at www.linkedin.com/in/pavlovalex
