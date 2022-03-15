@@ -11,21 +11,14 @@
 ### Setup ###
 
 * Create an app using [BindID Admin Portal](https://admin.bindid-sandbox.io/console/#/applications).
-     From the application settings, obtain the client credentials and configure `http://localhost:8080/redirect` as a redirect URI for this client so that you can run the sample app on your local machine. For more, see [BindID Admin Portal: Get Started](https://developer.bindid.io/docs/guides/admin_portal/topics/getStarted/get_started_admin_portal).
+     From the application settings, obtain the client credentials and configure redirect URL.
+     See [BindID Admin Portal: Get Started](https://developer.bindid.io/docs/guides/admin_portal/topics/getStarted/get_started_admin_portal)
+     for detailed instructions on configuring an app.
+* Rename env-template file into .env and edit the .env to initialize variables with values taken from BindID Admin Portal
+* Launch the server: _npm start_
 
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+### When in doubt ###
 
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Read the source code
+* RTFM
+* If none of the above works ping me at www.linkedin.com/in/pavlovalex

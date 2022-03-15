@@ -1,0 +1,5 @@
+BINDID_SERVER_URL = "https://signin.bindid-sandbox.io"
+BINDID_CLIENT_ID = ""
+BINDID_CLIENT_SECRET = ""
+BINDID_REDIRECT_URI = ""
+PORT = 3000
