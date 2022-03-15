@@ -4,9 +4,11 @@ const OpenIDConnectStrategy = require('passport-openidconnect');
 const AppDB = require("../db");
 const emailValidator = require("email-validator");
 const passwordUtils = require("./password-utils");
-const strategyName = 'bindid';
+const {IllegalStateError, DuplicateBindIDAccountError, InvalidCredentialsError} = require("../errors");
 require("dotenv").config();
 const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
+
+const strategyName = 'bindid';
 
 passport.use(strategyName, new OpenIDConnectStrategy({
         issuer: process.env['BINDID_SERVER_URL'],
@@ -16,14 +18,13 @@ passport.use(strategyName, new OpenIDConnectStrategy({
         clientID: process.env['BINDID_CLIENT_ID'],
         clientSecret: process.env['BINDID_CLIENT_SECRET'],
         callbackURL: process.env['BINDID_REDIRECT_URI'],
-        skipUserProfile: false,
-        acrValues: 'ts.bindid.iac.email',
-        scope: ['openid', 'email'],
+        skipUserProfile: false,             // Instruct OIDC middleware to retrieve user profile after authentication
+        scope: ['openid', 'email'],         // Request user email, and
+        acrValues: 'ts.bindid.iac.email',   // require email verification by BindID service
         nonce: true,
-        passReqToCallback: true
+        passReqToCallback: true // We need a handle on request to access to the request.user from withing verify()
     },
     async function verify(req, issuer, uiProfile, idProfile, context, idToken, accessToken, refreshToken, params, cb) {
-
         let user, email;
         const db = new AppDB();
 
@@ -33,18 +34,18 @@ passport.use(strategyName, new OpenIDConnectStrategy({
 
             if (credentials) {
                 // The BindID user has previously logged in to the app.
-                // Get the user account associated with the federated credentials and
-                // log the user in.
+                // Get the user account associated with the federated credentials
                 user = await db.findUserById(credentials.user_id);
 
                 if (!user) {  // Data integrity issue
-                    return cb(new Error("internal error"));
+                    return cb(new IllegalStateError("Data integrity error"));
                 }
 
                 // Check if it is a biometric enrollment for currently signed-in user
                 if (req.user && req.user.id !== user.id) {
-                    return cb(new Error("multiple accounts"))
+                    return cb(new DuplicateBindIDAccountError())
                 }
+                // Log the user in
                 return cb(null, {
                     id: user.id.toString(),
                     name: user.name,
@@ -92,8 +93,7 @@ passport.use(strategyName, new OpenIDConnectStrategy({
         } catch (error) {
             try {
                 await db.rollback();
-            } catch (_) {
-            }
+            } catch {}
             return cb(error);
         } finally {
             await db.close();
@@ -157,7 +157,7 @@ router.post('/link/bindid',
         try {
             var linkedUser = await passwordUtils.authenticateUser(email, req.body.password);
         } catch (error) {
-            if (error instanceof passwordUtils.InvalidCredentialsError) {
+            if (error instanceof InvalidCredentialsError) {
                 res.render('link-bindid', {error: 'Invalid credentials', user: currentUser, request_body: req.body});
                 return;
             }

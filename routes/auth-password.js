@@ -2,6 +2,7 @@ const express = require('express');
 const passport = require('passport');
 const passwordUtils = require('./password-utils');
 const LocalStrategy = require('passport-local');
+const {InvalidCredentialsError} = require("../errors");
 const emailValidator = require("email-validator");
 const crypto = require('crypto');
 const AppDB = require("../db");
@@ -12,7 +13,7 @@ passport.use(strategyName, new LocalStrategy(async function verify(email, passwo
         const user = await passwordUtils.authenticateUser(email, password);
         return cb(null, user);
     } catch (error) {
-        if (error instanceof passwordUtils.InvalidCredentialsError) {
+        if (error instanceof InvalidCredentialsError) {
             return cb(null, null);
         }
         return cb(error, false)

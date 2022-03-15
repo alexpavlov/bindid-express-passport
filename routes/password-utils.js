@@ -1,11 +1,8 @@
 const crypto = require('crypto');
 const AppDB = require('../db');
-
-class InvalidCredentialsError extends Error {}
+const {InvalidCredentialsError} = require("../errors");
 
 module.exports = {
-    InvalidCredentialsError,
-
     calculatePasswordHash: async function (password, salt) {
         return new Promise((resolve, reject) => {
             crypto.pbkdf2(password, salt, 310000, 32, 'sha256', function(err, hashedPassword) {
