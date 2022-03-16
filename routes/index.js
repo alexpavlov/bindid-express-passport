@@ -21,4 +21,30 @@ router.get('/',
         res.render('index', {user: req.user, suggestBindID: suggestBindID});
     });
 
+router.post('/unenroll',
+    ensureLoggedIn(),
+    async function (req, res, next) {
+        const db = new AppDB();
+        try {
+            await db.deleteFederatedCredentials(req.user.id, process.env['BINDID_SERVER_URL'])
+        } finally {
+            await db.close();
+        }
+        res.redirect('/')
+    });
+
+router.post('/delete',
+    ensureLoggedIn(),
+    async function (req, res, next) {
+        const db = new AppDB();
+        try {
+            await db.deleteAllFederatedCredentialsForUser(req.user.id)
+            await db.deleteUserById(req.user.id)
+        } finally {
+            req.logout()
+            await db.close();
+        }
+        res.redirect('/')
+    });
+
 module.exports = router;

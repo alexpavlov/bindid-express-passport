@@ -6,6 +6,12 @@ block content
     h3= `Hi ${user.name || 'Friend'}. Welcome to our web site!`
     if suggestBindID
       p(class='help') Tired of passwords? !{'<a href="/enroll">Enroll in biometric authentication</a>'} here
+    else
+      form(action='/unenroll' method='post')
+        button(type='submit') Deactivate BindID enrollment
+      p
+    form(action='/delete' method='post')
+      button(type='submit') Delete account
     hr
     form(action='/logout' method='post')
       button(type='submit') Logout

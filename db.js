@@ -99,6 +99,26 @@ class AppDB {
         });
     }
 
+    deleteFederatedCredentials(userId, provider) {
+        const that = this;
+        return new Promise((resolve, reject) => {
+            that.db.run('DELETE FROM federated_credentials WHERE user_id = ? AND provider = ?', [userId, provider], function(err) {
+                if (err) { reject(err); }
+                else { resolve(); }
+            });
+        });
+    }
+
+    deleteAllFederatedCredentialsForUser(userId) {
+        const that = this;
+        return new Promise((resolve, reject) => {
+            that.db.run('DELETE FROM federated_credentials WHERE user_id = ?', [userId], function(err) {
+                if (err) { reject(err); }
+                else { resolve(); }
+            });
+        });
+    }
+
     findUserById(id) {
         const that = this;
         return new Promise((resolve, reject) => {
