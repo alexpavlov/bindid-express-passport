@@ -11,7 +11,8 @@
 ### Setup ###
 
 * Create an app using [BindID Admin Portal](https://admin.bindid-sandbox.io/console/#/applications).
-     From the application settings, obtain the client credentials and configure redirect URL.
+     From the application settings, obtain the client credentials and configure redirect URL to match fully qualified URL of /redirect/bindid,
+     e.g. https://mywebsite.com/redirect/bindid.
      See [BindID Admin Portal: Get Started](https://developer.bindid.io/docs/guides/admin_portal/topics/getStarted/get_started_admin_portal)
      for detailed instructions on configuring an app.
 * Rename env-template file into .env and edit the .env to initialize variables with values taken from BindID Admin Portal
